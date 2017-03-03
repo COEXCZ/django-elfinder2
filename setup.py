@@ -42,5 +42,5 @@ setup(
     download_url = 'https://github.com/COEXCZ/django-elfinder2/archive/master.zip',
     packages = ['elfinder', 'elfinder.volume_drivers'],
     include_package_data=True,
-    requires = ['django (>=1.10)', 'mptt (>=0.5.2)', 'patool'],
+    install_requires = ['django (>=1.10)', 'mptt (>=0.5.2)', 'patool'],
 )
