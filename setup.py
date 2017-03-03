@@ -39,7 +39,7 @@ setup(
     author = 'COEX',
     author_email = 'support@coex.cz',
     url = 'https://github.com/COEXCZ/django-elfinder2/',
-    download_url = 'https://github.com/COEXCZ/django-elfinder2/archive/TinyMCE4.zip',
+    download_url = 'https://github.com/COEXCZ/django-elfinder2/archive/master.zip',
     packages = ['elfinder', 'elfinder.volume_drivers'],
     include_package_data=True,
     requires = ['django (>=1.10)', 'mptt (>=0.5.2)', 'patool'],
