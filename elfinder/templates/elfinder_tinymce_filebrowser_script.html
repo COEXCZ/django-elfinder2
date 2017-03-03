@@ -1,17 +1,17 @@
 function elFinderBrowser (field_name, url, type, win) {
-    var elfinder_url = '{% url "elfinder_tinymce_filebrowser_dialog" %}';    // use an absolute path!
+    var elfinder_url = '{% url "elfinder_tinymce_filebrowser_dialog" %}';
     tinyMCE.activeEditor.windowManager.open({
         file: elfinder_url,
         title: 'elFinder 2.0',
-        width: 900,
+        width: 1400,
         height: 450,
-        resizable: 'yes',
-        inline: 'yes',    // This parameter only has an effect if you use the inlinepopups plugin!
+        resizable: true,
         popup_css: false, // Disable TinyMCE's default popup CSS
-        close_previous: 'no'
+        close_previous: false
     }, {
-        window: win,
-        input: field_name
+        setUrl: function (url) {
+            win.document.getElementById(field_name).value = url;
+        }
     });
     return false;
 }

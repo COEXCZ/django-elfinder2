@@ -50,3 +50,10 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+.idea/django-elfinder2.iml
+.idea/encodings.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
