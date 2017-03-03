@@ -42,5 +42,5 @@ setup(
     download_url = 'https://github.com/bohyn/django-elfinder/tarball/v0.3-ext',
     packages = ['elfinder', 'elfinder.volume_drivers'],
     include_package_data=True,
-    requires = ['django (>=1.3)', 'mptt (>=0.5.2)'],
+    requires = ['django (>=1.3)', 'mptt (>=0.5.2)', 'patool'],
 )

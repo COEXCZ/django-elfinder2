@@ -4,6 +4,8 @@ import logging
 import traceback
 import sys
 import collections
+import os
+import patoolib
 
 
 """ Connector class for Django/elFinder integration.
@@ -30,6 +32,7 @@ class ElFinderConnector():
         self.data = {}
         self.response = {}
         self.return_view = None
+        self.is_return_view = False
 
         # Populate the volumes dict, using volume_id as the key
         self.volumes = {}
@@ -58,6 +61,9 @@ class ElFinderConnector():
                 'rename': ('__rename', {'target': True, 'name': True}),
                 'rm': ('__remove', {'targets[]': True}),
                 'upload': ('__upload', {'target': True}),
+                'extract': ('__extract', {'target': True}),
+                'archive': ('__archive', {'target': True, 'targets[]': True,
+                                          'name': True, 'type': True}),
                }
 
     def get_init_params(self):
@@ -70,8 +76,13 @@ class ElFinderConnector():
                 'uplMaxSize': '128M',
                 'options': {'separator': '/',
                             'disabled': [],
-                            'archivers': {'create': [],
-                                          'extract': []},
+                            'archivers': {"create": [
+                                "application/zip",
+                            ],
+                            "extract": [
+                                "application/rar",
+                                "application/zip",
+                            ]},
                             'copyOverwrite': 1}
                }
 
@@ -80,7 +91,7 @@ class ElFinderConnector():
         """
         return ['cmd', 'target', 'targets[]', 'current', 'tree',
                 'name', 'content', 'src', 'dst', 'cut', 'init',
-                'type', 'width', 'height', 'upload[]']
+                'type', 'width', 'height', 'upload[]', 'dirs[]']
 
     def get_volume(self, hash):
         """ Returns the volume which contains the file/dir represented by the
@@ -157,6 +168,8 @@ class ElFinderConnector():
             if field in data_source:
                 if field == "targets[]":
                     self.data[field] = data_source.getlist(field)
+                elif field == "dirs[]":
+                    self.data['name'] = data_source.getlist(field)[0]
                 else:
                     self.data[field] = data_source[field]
 
@@ -214,6 +227,7 @@ class ElFinderConnector():
         # A file was requested, so set return_view to the read_file view.
         #self.return_view = self.read_file_view(self.request, volume, target)
         self.return_view = volume.read_file_view(self.request, target)
+        self.is_return_view = True
 
     def __open(self):
         """ Handles the 'open' command.
@@ -297,6 +311,51 @@ class ElFinderConnector():
         if source_volume != dest_volume:
             raise Exception('Moving between volumes is not supported.')
         self.response.update(dest_volume.paste(targets, source, dest, cut))
+
+    def __archive(self):
+        target = self.data['target']
+        targets = self.data['targets[]']
+        name = self.data['name']
+        type = self.data['type']
+        source_volume = self.get_volume(target)
+        abs_path = source_volume._find_path(target)
+        type_map = {
+            "application/x-tar": 'tar',
+            "application/zip": 'zip',
+        }
+        if abs_path:
+            zipfile = os.path.join(abs_path, "{}.{}".format(name, type_map[type]))
+            files = []
+            added = []
+            for trg in targets:
+                orig_abs_path = source_volume._find_path(trg)
+                files.append(orig_abs_path)
+
+            patoolib.create_archive(zipfile, files)
+
+        for node in source_volume.get_tree(target):
+            if source_volume._find_path(node['hash']) == zipfile:
+                added.append(node)
+        self.response.update({"added": added})
+
+    def __extract(self):
+        target = self.data['target']
+        source_volume = self.get_volume(target)
+        archive_file = source_volume.get_info(target)
+        archive_file_path = source_volume._find_path(target)
+        archive_name = archive_file_path.split('/')[-1].split('.')[0]
+        folder_path = os.path.join(
+            source_volume._find_path(archive_file.get('phash')),
+            archive_name
+        )
+        self.get_volume(archive_file.get('phash')).mkdir(archive_name, archive_file.get('phash'))
+        patoolib.extract_archive(archive_file_path, outdir=folder_path, interactive=False)
+        added = []
+        for node in source_volume.get_tree(archive_file.get('phash')):
+            if source_volume._find_path(node['hash']) == folder_path:
+                added.append(node)
+
+        self.response.update({"added": added})
 
     def __remove(self):
         targets = self.data['targets[]']

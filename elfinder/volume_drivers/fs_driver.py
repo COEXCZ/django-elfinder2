@@ -81,6 +81,11 @@ class FileWrapper(WrapperBase):
     def name(self):
         return self._file.name
 
+    def get_chunks(self):
+        if self._file is None:
+            self._file = File(open(self.path, 'rb'))
+        return self._file.chunks()
+
     def get_contents(self):
         if self._file is None:
             self._file = File(open(self.path))
@@ -91,7 +96,7 @@ class FileWrapper(WrapperBase):
         if self._file is not None:
             self._file.close()
             self._file = None
-        _file = File(open(self.path, "w"))
+        _file = File(open(self.path, "ab"))
         _file.write(data)
         _file.close()
 
@@ -136,7 +141,8 @@ class FileWrapper(WrapperBase):
 
     def get_url(self):
         rel_path = os.path.relpath(self.path, self.root).replace('\\', '/')
-        return '%s%s' % (elfinder_settings.ELFINDER_FS_DRIVER_URL, rel_path)
+        user_path = '%s/' % (self.root.split('/')[-1],)
+        return '%s%s%s' % (elfinder_settings.ELFINDER_FS_DRIVER_URL, user_path, rel_path)
 
     def get_mime(self, path):
         mime = mimes.guess_type(path)[0] or 'Unknown'
@@ -272,9 +278,13 @@ class FileSystemVolumeDriver(BaseVolumeDriver):
 
     def read_file_view(self, request, hash):
         file_path = self._find_path(hash)
-        return render_to_response('read_file.html',
-                                  {'file': FileWrapper(file_path)},
-                                  RequestContext(request))
+        from django.http import HttpResponse
+        resp = HttpResponse(content_type='application/force-download')
+        file = FileWrapper(file_path, self.root)
+        for chunk in file.get_chunks():
+            resp.write(chunk)
+
+        return resp
 
     def mkdir(self, name, parent):
         parent_path = self._find_path(parent)
@@ -301,7 +311,29 @@ class FileSystemVolumeDriver(BaseVolumeDriver):
         return dir_list
 
     def paste(self, targets, source, dest, cut):
-        pass  # TODO
+        """ Moves/copies target files/directories from source to dest. """
+        # source_dir = self._get_path_object(source)
+        dest_dir = self._get_path_object(self._find_path(dest))
+        added = []
+        removed = []
+        if dest_dir.is_dir():
+            for target in targets:
+                orig_abs_path = self._find_path(target)
+                orig_obj = self._get_path_object(orig_abs_path)
+                new_abs_path = safe_join(self.root, dest_dir.get_path(), os.path.basename(orig_abs_path))
+                if cut:
+                    _fnc = shutil.move
+                    removed.append(orig_obj.get_info()['hash'])
+                else:
+                    if orig_obj.is_dir():
+                        _fnc = shutil.copytree
+                    else:
+                        _fnc = shutil.copy
+                _fnc(orig_abs_path, new_abs_path)
+                added.append(self._get_path_info(new_abs_path))
+
+        return {"added": added,
+                "removed": removed}
 
     def remove(self, target):
         obj = self._get_path_object(self._find_path(target))

@@ -1,3 +1,0 @@
-[submodule "elfinder/static/elfinder"]
-	path = elfinder/static/elfinder
-	url = git://github.com/Studio-42/elFinder.git
