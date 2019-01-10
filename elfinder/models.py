@@ -25,8 +25,8 @@ class Directory(MPTTModel, FileCollectionChildMixin):
              being saved with no parent.
     """
     name = models.CharField(max_length=255)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='dirs')
-    collection = models.ForeignKey('FileCollection')
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='dirs', on_delete=models.SET_NULL)
+    collection = models.ForeignKey('FileCollection', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = 'directories'
@@ -95,9 +95,9 @@ class File(models.Model, FileCollectionChildMixin):
     """
     name = models.CharField(max_length=255)
     parent = TreeForeignKey(Directory, null=True, blank=True,
-                            related_name='files')
+                            related_name='files', on_delete=models.SET_NULL)
     content = models.TextField(max_length=2048, blank=True)
-    collection = models.ForeignKey('FileCollection')
+    collection = models.ForeignKey('FileCollection', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('name', 'parent')
