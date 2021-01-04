@@ -12,7 +12,7 @@ This module is not ready for production use, and only a limited set of
 elFinder commands are currently supported.
 
 Supported only:
-  - Django 1.10
+  - Django 1.10+
   - TinyMCE4
   - Elfinder 2 - File system volume driver
 
