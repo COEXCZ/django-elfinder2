@@ -1,5 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+
 from elfinder.models import FileCollection, Directory, File
+from elfinder.volume_drivers.fs_driver import FileSystemVolumeDriver
+
 import logging
 import traceback
 import sys
@@ -140,7 +144,14 @@ class ElFinderConnector():
         try:
             func()
         except Exception as e:
-            self.response['error'] = '%s' % e
+            msg = '%s' % e
+
+            for vol_prefix, vol in self.volumes.items():
+                if vol_prefix in self.data.get('target', '') and issubclass(vol.__class__, FileSystemVolumeDriver):
+                    msg = msg.replace(settings.ELFINDER_FS_DRIVER_ROOT, '...')
+                    break
+
+            self.response['error'] = msg
             logger.exception(e)
 
     def run(self, request):

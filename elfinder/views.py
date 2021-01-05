@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -10,6 +11,7 @@ from elfinder.volume_drivers import get_volume_driver
 from django.views.decorators.csrf import csrf_exempt
 
 
+@staff_member_required
 def index(request, coll_id=None):
     """ Displays the elFinder file browser template for the specified
         collection.
@@ -20,6 +22,7 @@ def index(request, coll_id=None):
                               RequestContext(request))
 
 
+@staff_member_required
 @csrf_exempt
 def connector_view(request, coll_id=None):
     """ Handles requests for the elFinder connector.
@@ -46,6 +49,7 @@ def connector_view(request, coll_id=None):
     return response
 
 
+@staff_member_required
 def read_file(request, volume, file_hash, template="read_file.html"):
     """ Default view for responding to "open file" requests.
 
