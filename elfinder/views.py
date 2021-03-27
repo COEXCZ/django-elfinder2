@@ -1,7 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 import json
 from django.template import RequestContext
 from elfinder.connector import ElFinderConnector
@@ -16,10 +16,9 @@ def index(request, coll_id=None):
     """ Displays the elFinder file browser template for the specified
         collection.
     """
+    context = {'coll_id': coll_id}
     # collection = FileCollection.objects.get(pk=coll_id)
-    return render_to_response("elfinder.html",
-                              {'coll_id': coll_id},
-                              RequestContext(request))
+    return render(request, "elfinder.html", context=context)
 
 
 @staff_member_required
@@ -56,6 +55,6 @@ def read_file(request, volume, file_hash, template="read_file.html"):
         coll: FileCollection this File belongs to
         file: The requested File object
     """
-    return render_to_response(template,
-                              {'file': file_hash},
-                              RequestContext(request))
+    context = {'file': file_hash}
+
+    return render(request, template)

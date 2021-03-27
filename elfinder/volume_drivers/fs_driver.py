@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime
 import mimetypes as mimes
 
+from django.core.cache import cache
 from django.conf import settings
 from django.core.files import File
 from django.shortcuts import render_to_response
@@ -225,11 +226,17 @@ class DirectoryWrapper(WrapperBase):
 
     @classmethod
     def mkdir(cls, dir_path, root):
+        recent_cache_key = f'recent-mkdir-{dir_path}'
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
+            cache.set(recent_cache_key, dir_path, 2)
             return cls(dir_path, root)
         else:
-            raise Exception("Directory '%s' already exists" % os.path.basename(dir_path))
+            # FIXME: Ugly hack
+            if cache.get(recent_cache_key):
+                return cls(dir_path, root)
+            else:
+                raise Exception("Directory '%s' already exists" % os.path.basename(dir_path))
 
 
 class FileSystemVolumeDriver(BaseVolumeDriver):
