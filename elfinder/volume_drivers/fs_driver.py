@@ -8,8 +8,6 @@ import mimetypes as mimes
 from django.core.cache import cache
 from django.conf import settings
 from django.core.files import File
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.utils._os import safe_join
 
 from elfinder.conf import settings as elfinder_settings

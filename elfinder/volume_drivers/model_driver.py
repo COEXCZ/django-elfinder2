@@ -1,6 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from elfinder.volume_drivers.base import BaseVolumeDriver
 from elfinder import models
 import logging
@@ -131,9 +130,7 @@ class ModelVolumeDriver(BaseVolumeDriver):
 
     def read_file_view(self, request, hash):
         file = self.get_object(hash)
-        return render_to_response('read_file.html',
-                                  {'file': file},
-                                  RequestContext(request))
+        return render(request=request, template_name='read_file.html', context={'file': file})
 
     def mkdir(self, name, parent):
         """ Creates a new directory. """
