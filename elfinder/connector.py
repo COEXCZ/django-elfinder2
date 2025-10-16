@@ -137,7 +137,7 @@ class ElFinderConnector():
             return
 
         func = getattr(self, '_' + self.__class__.__name__ + func_name, None)
-        if not isinstance(func, collections.Callable):
+        if not isinstance(func, collections.abc.Callable):
             self.response['error'] = 'Command failed'
             return
 
